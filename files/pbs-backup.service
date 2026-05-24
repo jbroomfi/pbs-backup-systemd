@@ -5,16 +5,17 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-EnvironmentFile=/etc/pbs-backup.env
-ExecStart=/usr/bin/proxmox-backup-client backup \
+EnvironmentFile=/etc/environment
+ExecStart=/usr/bin/bash -c 'source /etc/pbs-backup.env && /usr/bin/proxmox-backup-client backup \
   root.pxar:/ \
-  --keyfile /root/pbs-encryption-key.enc \
   --exclude /proc \
   --exclude /sys \
   --exclude /dev \
   --exclude /run \
   --exclude /tmp \
   --exclude /var/cache \
-  --exclude /swap.img
+  --exclude /swap.img \
+  --ns $PBS_NAMESPACE \
+'
 # Send email on failure
-ExecStopPost=/bin/sh -c 'if [ "$$EXIT_STATUS" -ne 0 ]; then echo "PBS backup failed on $(hostname)" | mail -s "Backup failure" admin@example.com; fi'
+ExecStopPost=/usr/bin/bash -c 'if [ "$$EXIT_STATUS" -ne 0 ]; then echo "PBS backup failed on $(hostname)" | mail -s "Backup failure" admin@example.com; fi'
