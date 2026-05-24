@@ -1,0 +1,20 @@
+[Unit]
+Description=Backup to Proxmox Backup Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/pbs-backup.env
+ExecStart=/usr/bin/proxmox-backup-client backup \
+  root.pxar:/ \
+  --keyfile /root/pbs-encryption-key.enc \
+  --exclude /proc \
+  --exclude /sys \
+  --exclude /dev \
+  --exclude /run \
+  --exclude /tmp \
+  --exclude /var/cache \
+  --exclude /swap.img
+# Send email on failure
+ExecStopPost=/bin/sh -c 'if [ "$$EXIT_STATUS" -ne 0 ]; then echo "PBS backup failed on $(hostname)" | mail -s "Backup failure" admin@example.com; fi'
